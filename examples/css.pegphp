@@ -25,34 +25,22 @@
   }
 
   private function extractList($list, $index) {
-    $result = [];
-
-    for ($i = 0; $i < count($list); $i++) {
-      if ($list[$i][$index] !== null) {
-        $result[] = $list[$i][$index];
-      }
-    }
-
-    return $result;
+    return array_map(function($element) { return $element[$index]; }, $list);
   }
 
   private function buildList($first, $rest, $index) {
     return array_merge($first !== null ? [$first] : [], $this->extractList($rest, $index));
   }
 
-  private function buildExpression($first, $rest) {
-    $result = $first;
-
-    for ($i = 0; $i < count($rest); $i++) {
-      $result = [
+  private function buildExpression($head, $tail) {
+    return array_reduce($tail, function($result, $element) {
+      return [
         "type" =>     "Expression",
-        "operator" => $rest[$i][0],
+        "operator" => $element[0],
         "left" =>     $result,
-        "right" =>    $rest[$i][1]
+        "right" =>    $element[1]
       ];
-    }
-
-    return $result;
+    }, $head)
   }
 }
 

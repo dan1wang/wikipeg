@@ -210,7 +210,7 @@ describe("generated parser behavior", function() {
             });
           });
 
-          it("discards any expectations recorded when matching the expression", function() {
+          it("silences any expectations recorded when matching the expression", function() {
             var parser = PEG.buildParser('start "start" = "a"');
 
             expect(parser).toFailToParse("b", {

@@ -163,7 +163,7 @@ describe("PEG.js grammar parser", function() {
       semantic_not: stripLeaf,
       rule_ref:     stripLeaf,
       literal:      stripLeaf,
-      "class":      stripLeaf,
+      class:        stripLeaf,
       any:          stripLeaf
     });
 
@@ -347,7 +347,7 @@ describe("PEG.js grammar parser", function() {
     expect('start = !"abcd"?').toParseAs(oneRuleGrammar(simpleNotOptional));
   });
 
-  /* Canonical SuffixedExpression is "\"ebcd\"?". */
+  /* Canonical SuffixedExpression is "\"abcd\"?". */
   it("parses SuffixedExpression", function() {
     expect('start = "abcd"\n?').toParseAs(oneRuleGrammar(optional));
     expect('start = "abcd"'   ).toParseAs(oneRuleGrammar(literalAbcd));

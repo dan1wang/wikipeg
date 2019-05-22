@@ -478,7 +478,7 @@ start = "a"*
 !! end
 
 !! desc
-49a. Zero or more in discard mode
+49a. Zero or more in asserted mode
 !! grammar
 start = $"a"*
 !! cases
@@ -498,7 +498,7 @@ start = "a"+
 !! end
 
 !! desc
-50a. One or more in discard mode
+50a. One or more in asserted mode
 !! grammar
 start = $"a"+
 !! cases
@@ -526,7 +526,7 @@ start = &"a" "a"
 !! end
 
 !! desc
-53. Positive simple predicate discards any expectations recorded when matching the expression
+53. Positive simple predicate silences any expectations recorded when matching the expression
 !! grammar
 start = "a" / &"b" / "c"
 !! cases
@@ -553,7 +553,7 @@ start = !"a" "b"
 !! end
 
 !! desc
-55. Negative simple predicate discards any expectations recorded when matching the expression
+55. Negative simple predicate silences any expectations recorded when matching the expression
 !! grammar
 start = "a" / !"b" / "c"
 !! cases
