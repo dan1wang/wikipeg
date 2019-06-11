@@ -26,22 +26,26 @@
     "lib/**/*.js",
     "lib/**/*.php",
     "src/**/*.php",
-    "tools/build-browser.js",
     "package.json"
   ],
   "main":            "lib/peg",
   "bin":             "bin/wikipeg",
   "scripts":         {
+    "benchmark": "make benchmark",
     "eslint": "make eslint",
-    "test": "make eslint && make test"
+    "test": "make eslint && make test",
+    "test-js": "make test-js",
+    "test-php": "make test-php"
   },
   "repository":      {
     "type": "git",
     "url":  "https://gerrit.wikimedia.org/r/wikipeg"
   },
   "devDependencies": {
-    "jasmine-node": "= 1.11.0",
-    "eslint":       "= 5.14.1"
+    "eslint": "= 5.14.1",
+    "fs-extra": "^8.0.1",
+    "jasmine-node": "^3.0.0",
+    "tmp": "^0.1.0"
   },
   "engines":         {
     "node": ">= 6.0.0"
