@@ -11,10 +11,6 @@
   return {
     run: function(benchmarks, runCount, options, callbacks) {
 
-      var isNode = typeof process === 'object'
-                   && process.versions
-                   && "node" in process.versions;
-
       /* Queue */
 
       var Q = {
@@ -24,25 +20,12 @@
           this.functions.push(f);
         },
 
-        run_browser: function() {
-          if (this.functions.length > 0) {
-            this.functions.shift()();
-            /*
-             * We can't use |arguments.callee| here because |this| would get
-             * messed-up in that case.
-             */
-            setTimeout(function() { Q.run(); }, 0);
-          }
-        },
-
-        run_node: function() {
+        run: function() {
           for (var i = 0; i < this.functions.length; i++) {
             this.functions[i]();
           }
         }
       };
-
-      Q.run = isNode ? Q.run_node : Q.run_browser;
 
       /*
        * The benchmark itself is factored out into several functions (some of them
@@ -73,7 +56,7 @@
           callbacks.benchmarkStart(benchmarks[i]);
 
           state.parser = PEG.buildParser(
-            callbacks.readFile("../examples/" + benchmarks[i].id + ".pegjs"),
+            callbacks.readFile(benchmarks[i].id + ".pegjs"),
             options
           );
           state.benchmarkInputSize = 0;
@@ -87,17 +70,10 @@
               test      = benchmark.tests[j],
               input, parseTime, averageParseTime, k, t;
 
-          var now;
-          if (isNode) {
-            now = function() {
-              var t = process.hrtime();
-              return t[0] * 1e3 + t[1] / 1e6;
-            };
-          } else {
-            now = function() {
-              return (new Date()).getTime();
-            };
-          }
+          const now = function() {
+            const t = process.hrtime();
+            return t[0] * 1e3 + t[1] / 1e6;
+          };
 
           callbacks.testStart(benchmark, test);
 

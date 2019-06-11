@@ -9,7 +9,7 @@ BIN_DIR              = bin
 SPEC_DIR             = tests/jasmine
 BENCHMARK_DIR        = benchmark
 NODE_MODULES_DIR     = node_modules
-NODE_MODULES_BIN_DIR = $(NODE_MODULES_DIR)/.bin
+NODE_MODULES_BIN_DIR = "$(NODE_MODULES_DIR)/.bin"
 
 # ===== Files =====
 
@@ -25,7 +25,7 @@ PHP           = php
 ESLINT        = $(NODE_MODULES_BIN_DIR)/eslint
 JASMINE_NODE  = $(NODE_MODULES_BIN_DIR)/jasmine-node
 WIKIPEG       = $(BIN_DIR)/wikipeg
-BENCHMARK_RUN = $(BENCHMARK_DIR)/run
+BENCHMARK_RUN = $(NODE) tests/run-benchmark.js
 
 # ===== Targets =====
 
@@ -36,6 +36,10 @@ parser:
 	$(WIKIPEG) $(PARSER_SRC_FILE) $(PARSER_OUT_FILE)
 
 test: spec common-tests-php common-tests-js
+
+test-js: spec common-tests-js
+
+test-php: spec common-tests-php
 
 # Run the spec suite
 spec:
