@@ -238,7 +238,7 @@ start = &{ return false; }
 !! end
 
 !! desc
-23. Semantic predicate can access labeled elements in a sequence
+23. Semantic predicate can access labeled elements in an outside sequence
 !! grammar
 start = a:"a" b:"b" c:"c" ("d" &{ return $a === "a" && $b === "b" && $c === "c"; })
 !! cases
@@ -1013,4 +1013,71 @@ Foo = "Ok " Main
 Bar = ref:<ref> "" { return $ref; }
 !! cases
 "Ok Done" => ["Ok ",["Done",1]]
+
+99. Picked predicate (single)
+!! grammar
+start = " " ' ' " " @"picked"
+space = " "
+!! cases
+"   picked" => "picked"
+!! end
+
+!! desc
+99a. Picked predicate (multiple)
+!! grammar
+start = space @"picked" space @"picked"
+space = " "
+!! cases
+" picked picked" => ["picked", "picked"]
+!! end
+
+!! desc
+99b. Picked predicate (one or more)
+!! grammar
+start = " " @[a-z]+
+!! cases
+" abcd" => ["a", "b", "c", "d"]
+!! end
+
+!! desc
+99c. Picked predicate (zero or more)
+!! grammar
+start = " " @[a-z]*
+!! cases
+" " => []
+!! end
+
+!! desc
+99d. Picked predicate: semantic predicate can access label variables from
+a preceding semantic predicate that is not picked
+!! grammar
+start = dropped:"dropped" space @"picked" &{ return $dropped === "dropped" }
+space = " "
+!! cases
+"dropped picked" => "picked"
+!! end
+
+!! desc
+99e. Picked predicate: label variables that is not picked is not returned
+!! grammar
+start = dropped:"dropped" space @"picked"
+space = " "
+!! cases
+"dropped picked" => "picked"
+!! end
+
+!! desc
+99f. Picked predicate: assertion can be picked
+!! grammar
+start = abc:"abc" @&{ return $abc === "abc" }
+!! cases
+"abc" => undefined
+!! end
+
+!! desc
+99g. Picked predicate: action takes precedence
+!! grammar
+start = @"abc" { return "xyz" }
+!! cases
+"abc" => "xyz"
 !! end

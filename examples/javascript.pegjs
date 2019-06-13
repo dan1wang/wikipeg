@@ -995,7 +995,7 @@ Statement
   / BreakStatement
   / ReturnStatement
   / WithStatement
-  / LabelledStatement
+  / LabeledStatement
   / SwitchStatement
   / ThrowStatement
   / TryStatement
@@ -1240,7 +1240,7 @@ DefaultClause
       };
     }
 
-LabelledStatement
+LabeledStatement
   = label:Identifier __ ":" __ body:Statement {
       return { type: "LabeledStatement", label: label, body: body };
     }
