@@ -159,7 +159,7 @@ describe("generated parser behavior", function() {
       });
     });
 
-    describe("rule", function() {
+    describe("start rule", function() {
       if (options.cache) {
         it("caches rule match results", function() {
           var parser = PEG.buildParser([
@@ -192,8 +192,11 @@ describe("generated parser behavior", function() {
 
       describe("when the expression doesn't match", function() {
         describe("without display name", function() {
-          it("reports match failure and doesn't record any expectation", function() {
-            var parser = PEG.buildParser('start = "a"');
+          it("reports match failure and records an expectation", function() {
+            var parser = PEG.buildParser(
+              'start = alpha "b";\n' +
+              'alpha = "a";\n'
+            );
 
             expect(parser).toFailToParse("b", {
               expected: [{ type: "literal", value: "a", description: '"a"' }]
@@ -203,7 +206,10 @@ describe("generated parser behavior", function() {
 
         describe("with display name", function() {
           it("reports match failure and records an expectation of type \"other\"", function() {
-            var parser = PEG.buildParser('start "start" = "a"');
+            var parser = PEG.buildParser(
+              'start "start" = alpha "b";\n' +
+              'alpha = "a";\n'
+            );
 
             expect(parser).toFailToParse("b", {
               expected: [{ type: "other", description: "start" }]
@@ -211,10 +217,46 @@ describe("generated parser behavior", function() {
           });
 
           it("silences any expectations recorded when matching the expression", function() {
-            var parser = PEG.buildParser('start "start" = "a"');
+            var parser = PEG.buildParser(
+              'start "start" = alpha "b";\n' +
+              'alpha = "a";\n'
+            );
 
             expect(parser).toFailToParse("b", {
               expected: [{ type: "other", description: "start" }]
+            });
+          });
+        });
+      });
+    });
+
+    describe("non-start rule", function() {
+
+      describe("when the expression doesn't match", function() {
+        describe("without display name", function() {
+          it("reports match failure and records an expectation", function() {
+            var parser = PEG.buildParser(
+              'start = alpha "b";\n' +
+              'alpha = a+;\n' +
+              'a = "a";\n'
+            );
+
+            expect(parser).toFailToParse("b", {
+              expected: [{ type: "literal", value: "a", description: '"a"' }]
+            });
+          });
+        });
+
+        describe("with display name", function() {
+          it("silences any expectations recorded when matching the expression", function() {
+            var parser = PEG.buildParser(
+              'start = alpha "b";\n' +
+              'alpha "alpha" = a+;\n' +
+              'a = "a";\n'
+            );
+
+            expect(parser).toFailToParse("c", {
+              expected: [{ type : 'other', description : 'alpha' }]
             });
           });
         });
