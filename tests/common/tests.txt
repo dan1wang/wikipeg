@@ -238,7 +238,7 @@ start = &{ return false; }
 !! end
 
 !! desc
-23. Semantic predicate can access labeled elements in a sequence
+23. Semantic predicate can access labeled elements in an outside sequence
 !! grammar
 start = a:"a" b:"b" c:"c" ("d" &{ return $a === "a" && $b === "b" && $c === "c"; })
 !! cases
@@ -602,161 +602,123 @@ start = "a" { return 42; }
 !! desc
 60. Action can access label variables from a labeled expression
 !! grammar
-start = a:"a" { return $a; }
+start
+  = "1 " a:"a" { return $a; }
+  / "2 " a:"a" b:"b" c:"c" { return [$a, $b, $c]; }
 !! cases
-"a" => "a"
+"1 a" => "a"
+"2 abc" => ["a", "b", "c"]
 !! end
 
 !! desc
-61. Action can access label variables from a sequence with labeled elements
+61. Nested action can access label variables from preceding labeled elements in an outside sequence
 !! grammar
-start = a:"a" b:"b" c:"c" { return [$a, $b, $c]; }
+start
+  = "g " a:"a" b:"b" c:"c"   ("d" { return [$a, $b, $c]; })  // group
+  / "? " a:"a" b:"b" c:"c"   ("d" { return [$a, $b, $c]; })? // optional
+  / "* " a:"a" b:"b" c:"c"   ("d" { return [$a, $b, $c]; })* // zero or more
+  / "+ " a:"a" b:"b" c:"c"   ("d" { return [$a, $b, $c]; })+ // one or more
+  / "$ " a:"a" b:"b" c:"c"  $("d" { return [$a, $b, $c]; })  // text
+  / "& " a:"a" b:"b" c:"c"  &("d" { return [$a, $b, $c]; }) "d" // positive simple predicate
+  / "! " a:"a" b:"b" c:"c"  !("E" { return [$a, $b, $c]; }) "d" // negative simple predicate
+  / "L " a:"a" b:"b" c:"c" d:("d" { return [$a, $b, $c]; }) // label
 !! cases
-"abc" => ["a", "b", "c"]
+"g abcd" => ["a", "b", "c", ["a", "b", "c"]]
+"? abcd" => ["a", "b", "c", ["a", "b", "c"]]
+"* abcd" => ["a", "b", "c", ["a", "b", "c"]]
+"+ abcd" => ["a", "b", "c", ["a", "b", "c"]]
+"$ abcd" => ["a", "b", "c", "d"]
+"& abcd" => ["a", "b", "c", undefined, "d"]
+"! abcd" => ["a", "b", "c", undefined, "d"]
+"L abcd" => ["a", "b", "c", ["a", "b", "c"]]
 !! end
 
 !! desc
-62. Action can access label variables from preceding labeled elements in an outside sequence (group)
+62. Deep nested action can access label variables from preceding labeled elements in an outside sequence
 !! grammar
-start = a:"a" b:"b" c:"c" ("d" { return [$a, $b, $c]; })
+start
+  = "1 " a:"a" ( b:"b" c:"c"    ("d" { return [$a, $b, $c]; })                ) // sequence
+  / "2 " a:"a" ( b:"b" c:"c"  d:("d" { return [$a, $b, $c]; }) { return $d; } ) // action
+  / "3 " a:"a" ( b:"b" c:"c"  ("X" / "Y" / "d" { return [$a, $b, $c]; } )     ) // choice
 !! cases
-"abcd" => ["a", "b", "c", ["a", "b", "c"]]
+"1 abcd" => ["a", ["b", "c", ["a", "b", "c"]]]
+"2 abcd" => ["a", ["a", "b", "c"]]
+"3 abcd" => ["a", ["b", "c", ["a", "b", "c"]]]
 !! end
 
 !! desc
-63. Action can access label variables from preceding labeled elements in an outside sequence (optional)
+63. Action can't access label variables from within a nested expression
 !! grammar
-start = a:"a" b:"b" c:"c" ("d" { return [$a, $b, $c]; })?
+start
+  = "& " "a" &(b:"b") "b" {return $b;} // simple predicate
+  / "/ " "a" ("a"/ b:"b") {return $b;} // nested choice
+  / "$ " "a" $(b:"b")     {return $b;} // text operator
+  / "? " "a" (b:"b")?     {return $b;} // optional
+  / "* " "a" (b:"b")*     {return $b;} // zero or more
+  / "+ " "a" (b:"b")+     {return $b;} // one or more
 !! cases
-"abcd" => ["a", "b", "c", ["a", "b", "c"]]
+"& ab" => ReferenceError
+"/ ab" => ReferenceError
+"$ ab" => ReferenceError
+"? ab" => ReferenceError
+"+ ab" => ReferenceError
 !! end
 
 !! desc
-64. Action can access label variables from preceding labeled elements in an outside sequence (zero or more)
-!! grammar
-start = a:"a" b:"b" c:"c" ("d" { return [$a, $b, $c]; })*
-!! cases
-"abcd" => ["a", "b", "c", [["a", "b", "c"]]]
-!! end
-
-!! desc
-65. Action can access label variables from preceding labeled elements in an outside sequence (one or more)
-!! grammar
-start = a:"a" b:"b" c:"c" ("d" { return [$a, $b, $c]; })+
-!! cases
-"abcd" => ["a", "b", "c", [["a", "b", "c"]]]
-!! end
-
-!! desc
-66. Action can access label variables from preceding labeled elements in an outside sequence (text)
-!! grammar
-start = a:"a" b:"b" c:"c" $("d" { return [$a, $b, $c]; })
-!! cases
-"abcd" => ["a", "b", "c", "d"]
-!! end
-
-!! desc
-67. Action can access label variables from preceding labeled elements in an outside sequence (positive simple predicate)
-!! grammar
-start = a:"a" b:"b" c:"c" &("d" { return [$a, $b, $c]; }) "d"
-!! cases
-"abcd" => ["a", "b", "c", undefined, "d"]
-!! end
-
-!! desc
-68. Action can access label variables from preceding labeled elements in an outside sequence (negative simple predicate)
-!! grammar
-start = a:"a" b:"b" c:"c" !("d" { return [$a, $b, $c]; }) "e"
-!! cases
-"abce" => ["a", "b", "c", undefined, "e"]
-!! end
-
-!! desc
-69. Action can access label variables from preceding labeled elements in an outside sequence (label)
-!! grammar
-start = a:"a" b:"b" c:"c" d:("d" { return [$a, $b, $c]; })
-!! cases
-"abcd" => ["a", "b", "c", ["a", "b", "c"]]
-!! end
-
-!! desc
-70. Action can access label variables from preceding labeled elements in an outside sequence (sequence)
-!! grammar
-start = a:"a" b:"b" c:"c" ("d" "e" ("f" { return [$a, $b, $c]; }))
-!! cases
-"abcdef" => ["a", "b", "c", ["d", "e", ["a", "b", "c"]]]
-!! end
-
-!! desc
-71. Action can access label variables from preceding labeled elements in an outside sequence (action)
-!! grammar
-start = a:"a" b:"b" c:"c" (d:("d" { return [$a, $b, $c]; }) { return $d; })
-!! cases
-"abcd" => ["a", "b", "c", ["a", "b", "c"]]
-!! end
-
-!! desc
-72. Action can access label variables from preceding labeled elements in an outside sequence (choice)
-!! grammar
-start = a:"a" b:"b" c:"c" ("d" / "e" / "f" { return [$a, $b, $c]; })
-!! cases
-"abcf" => ["a", "b", "c", ["a", "b", "c"]]
-!! end
-
-!! desc
-73. Action can't access label variables from within a simple predicate
-!! grammar
-start = a:"a" &(b:"b") "b" {return $b;}
-!! cases
-"ab" => ReferenceError
-!! end
-
-!! desc
-74. Action can't access label variables from a previous nested choice
-!! grammar
-start = ("a"/b:"b") {return $b;}
-!! cases
-"b" => ReferenceError
-!! end
-
-!! desc
-75. Action can't access label variables from a previous nested text operator
-!! grammar
-start = $(a:"a") {return $a;}
-!! cases
-"a" => ReferenceError
-!! end
-
-!! desc
-76. Action can't access label variables from a conditional subexpression
-!! grammar
-start = (a:"a")? {return $a;}
-!! cases
-"a" => ReferenceError
-!! end
-
-!! desc
-77. Action can't access label variables from a star subexpression
-!! grammar
-start = (a:"a")* {return $a;}
-!! cases
-"a" => ReferenceError
-!! end
-
-!! desc
-78. Action can't access label variables from a plus subexpression
-!! grammar
-start = (a:"a")+ {return $a;}
-!! cases
-"a" => ReferenceError
-!! end
-
-!! desc
-79. A label variable is not overwritten by a later hidden one
+64. A label variable is not overwritten by a later hidden one
 !! grammar
 start = a:"a" (a:"b")? {return $a;}
 !! cases
 "ab" => "a"
+!! end
+
+65. Picked predicate
+!! grammar
+start
+  = "1 " "a"  "b"  "c"  @"d" // single
+  / "2 " "a" @"b"  "c"  @"d" // multiple
+  / "? " "a" @"b"? "c"   "d"  // optional
+  / "* " "a" @"b"* "c"   "d"  // zero or more
+  / "+ " "a" @"b"+ "c"   "d"  // one or more
+  / "& " "a" @&"b" "b" "c" "d" // positive simple predicate
+  / "! " "a" @!"E" "b" "c" "d" // negative simple predicate
+!! cases
+"1 abcd" => "d"
+"2 abcd" => ["b", "d"]
+"? abcd" => "b"
+"* abcd" => "b"
+"+ abcd" => "b"
+"& abcd" => undefined
+"& abcd" => undefined
+!! end
+
+!! desc
+66. Picked predicate does not interfere with label variables
+!! grammar
+start
+  = "1 " a:"a" @"b"   &{ return $a == "a" }
+  / "2 " a:"a" @b:"b" &{ return $b == "b" }
+  / "3 " a:"a" @b:"b" { return $a }
+!! cases
+"1 ab" => "b"
+"2 ab" => "b"
+"3 ab" => "a"
+!! end
+
+!! desc
+67. Picked predicate: label variables that is not picked is not returned
+!! grammar
+start = a:"a" @"b"
+!! cases
+"ab" => "b"
+!! end
+
+!! desc
+68. Picked predicate does not override action
+!! grammar
+start = @"abc" { return "xyz" }
+!! cases
+"abc" => "xyz"
 !! end
 
 !! desc
